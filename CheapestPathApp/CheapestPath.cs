@@ -51,6 +51,11 @@ namespace CheapestPath
             return x;
         }
 
+        /// <summary>
+        /// computes the path
+        /// </summary>
+        /// <param name="data">input data</param>
+        /// <returns>a tuple of the aggregate matrix and a list of the cells of the cheapest path</returns>
         public static (double[,] matrix, List<CellIndex> path) ComputePath(double[,] data)
         {
             var x = ComputeAggregation(data);
