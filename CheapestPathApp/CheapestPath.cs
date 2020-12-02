@@ -5,6 +5,40 @@ using System.Threading.Tasks;
 
 namespace CheapestPath
 {
+
+    public class RowArray2D<T>
+    {
+        readonly T[] data;
+        public int Rows { get; }
+        public int Cols { get; }
+
+        public RowArray2D(int rows, int cols) {
+            this.Rows=rows; 
+            this.Cols=cols;
+            data=new T[rows * cols];
+        }
+
+        public RowArray2D(T[,] input)
+        {
+            this.Rows = input.GetLength(0);
+            this.Cols = input.GetLength(1);
+            this.data = new T[this.Rows * this.Cols];
+            for (int row = 0; row < this.Rows; ++row) for (int col = 0; col < this.Cols; ++col) this.data[(row * this.Cols) + col] = input[row, col];
+
+        }
+
+        public T this[int row, int col]
+        {
+            get => data[(row * Cols) + col];
+            set => data[(row * Cols) + col] = value;
+        }
+
+        public Span<T> this[int row]
+        {
+            get => data.AsSpan<T>(row * Cols, Cols);
+        }
+    }
+
     /// <summary>
     /// this class computes the cheapest past from top to bottom in a grid
     /// every cell has a cost value
@@ -14,11 +48,18 @@ namespace CheapestPath
     {
         public record CellIndex(int Row, int Col);
 
-        private static int MinThree(double[,] x, int row, int col)
+        private static int MinThree(RowArray2D<double> x, int row, int col)
         {
-            var min = x[row, col]; var minIdx = col;
-            if (col - 1 >= 0 && x[row, col - 1] < min) { minIdx = col - 1; min = x[row, col - 1]; }
-            if (col + 1 < x.GetLength(1) && x[row, col + 1] < min)  minIdx = col + 1; 
+            var min = x[row, col]; 
+            var minIdx = col;
+            if (col - 1 >= 0 && x[row, col - 1] < min) { 
+                minIdx = col - 1; 
+                min = x[row, col - 1]; 
+            }
+            if (col + 1 < x.Cols && x[row, col + 1] < min)
+            {
+                minIdx = col + 1;
+            }
             return minIdx;
         }
 
@@ -27,12 +68,12 @@ namespace CheapestPath
         /// </summary>
         /// <param name="data">return the aggregated cost. The column with the lowest value in the first row is the starting point of the path</param>
         /// <returns></returns>
-        private static double[,] ComputeAggregation(double[,] data)
+        private static RowArray2D<double> ComputeAggregation(RowArray2D<double> data)
         {
             // get rows and columns
-            var rows = data.GetLength(0); var cols = data.GetLength(1);
+            var rows = data.Rows; var cols = data.Cols;
             // crate output
-            var x = new double[rows, cols];
+            var x = new RowArray2D<double>(rows, cols);
             // copy the lowest row, as the cost in the lowest row is simply the cost of the original data
             for (int col = 0; col < cols; ++col)
             {
@@ -56,25 +97,16 @@ namespace CheapestPath
         /// </summary>
         /// <param name="data">input data</param>
         /// <returns>a tuple of the aggregate matrix and a list of the cells of the cheapest path</returns>
-        public static (double[,] matrix, List<CellIndex> path) ComputePath(double[,] data)
+        public static (RowArray2D<double> aggregated, List<CellIndex> path) ComputePath(RowArray2D<double> data)
         {
             var x = ComputeAggregation(data);
             var path = new List<CellIndex>();
-            int minIdx = 0;
             // find the minimum in the first row
-            double minVal = x[0, 0];
-            for (int col = 1; col < data.GetLength(1); ++col)
-            {
-                if (x[0, col] < minVal)
-                {
-                    minIdx = col;
-                    minVal = x[0, col];
-                }
-            }
+            int minIdx = Enumerable.Range(0, x.Cols).Aggregate((a, b) => (x[0,a] < x[0,b]) ? a : b); 
             // add to as first element in the path
             path.Add(new CellIndex(0, minIdx));
             // for the other rows
-            for (int row = 1; row < data.GetLength(0); ++row)
+            for (int row = 1; row < data.Rows; ++row)
             {
                 // find the minimum 
                 var newMinIdx = MinThree(x, row, minIdx);

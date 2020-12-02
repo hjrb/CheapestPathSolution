@@ -13,10 +13,10 @@
 @if (data != null)
 {
     <table class="table table-bordered" style="font-size: 10px">
-        @for (int row = 0; row < data.GetLength(0); ++row)
+        @for (int row = 0; row < data.Rows; ++row)
         {
             <tr>
-                @for (int col = 0; col < data.GetLength(1); ++col)
+                @for (int col = 0; col < data.Cols; ++col)
                 {
                     <td style="width:5em; text-align:center; background-color:@GetColor(row, col)">@data[row, col].ToString("N2") | @matrix[row, col].ToString("N2")</td>
                 }
@@ -38,8 +38,8 @@
 
 @code {
     int N = 5;
-    double[,] data;
-    double[,] matrix;
+    RowArray2D<double> data;
+    RowArray2D<double> matrix;
     double cost;
     List<CheapestPath.CellIndex> cheapestPath;
 
@@ -52,7 +52,7 @@
     public void Update()
     {
 
-        data = new double[N, N];
+        data = new RowArray2D<double>(N, N);
         var r = new Random();
         for (int row = 0; row < N; ++row)
         {
