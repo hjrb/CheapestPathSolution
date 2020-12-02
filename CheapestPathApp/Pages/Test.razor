@@ -29,12 +29,10 @@
 <p>Cost: @(cost)</p>
 @if (cheapestPath != null)
 {
-    <ul>
-        @foreach (var item in cheapestPath.OrderBy(x => x.Row))
-        {
-            <li>@($"{item.Row}:{item.Col}")</li>
-        }
-    </ul>
+    @foreach (var item in cheapestPath.OrderBy(x => x.Row))
+    {
+        @($"{item.Row}:{item.Col}")<span>; </span>
+    }
 }
 
 
