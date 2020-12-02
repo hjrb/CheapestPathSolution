@@ -1,0 +1,74 @@
+﻿@page "/test"
+@using System;
+@using System.Linq;
+@using CheapestPath;
+
+<h3>Cheapest Path</h3>
+<div class="form-inline">
+    <label for="N" class="text-info mr-2">N</label>
+    <input class="form-control mr-2" id="N" type="text" @bind-value="N" />
+    <input type="button" class="btn btn-info" @onclick="Update" value="Update" />
+</div>
+<h2>Data and Aggregated Cost</h2>
+@if (data != null)
+{
+    <table class="table table-bordered" style="font-size: 10px">
+        @for (int row = 0; row < data.GetLength(0); ++row)
+        {
+            <tr>
+                @for (int col = 0; col < data.GetLength(1); ++col)
+                {
+                    <td style="width:5em; text-align:center; background-color:@GetColor(row, col)">@data[row, col].ToString("N2") | @matrix[row, col].ToString("N2")</td>
+                }
+            </tr>
+        }
+    </table>
+}
+
+<h2>Cheapest Path</h2>
+<p>Cost: @(cost)</p>
+@if (cheapestPath != null)
+{
+    <ul>
+        @foreach (var item in cheapestPath.OrderBy(x => x.Row))
+        {
+            <li>@($"{item.Row}:{item.Col}")</li>
+        }
+    </ul>
+}
+
+
+@code {
+    int N = 5;
+    double[,] data;
+    double[,] matrix;
+    double cost;
+    List<CheapestPath.CellIndex> cheapestPath;
+
+
+    protected override void OnInitialized()
+    {
+        Update();
+    }
+
+    public void Update()
+    {
+
+        data = new double[N, N];
+        var r = new Random();
+        for (int row = 0; row < N; ++row)
+        {
+            for (int col = 0; col < N; ++col)
+            {
+                data[row, col] = Math.Round(r.NextDouble() * 10);
+            }
+        }
+        (matrix, cheapestPath) = CheapestPath.ComputePath(data);
+        var start = cheapestPath[0];
+        cost = matrix[start.Row, start.Col];
+
+    }
+
+    string GetColor(int row, int col) =>
+        cheapestPath.Contains(new CheapestPath.CellIndex(row, col)) ? "lightblue" : "lightgrey";
+}
